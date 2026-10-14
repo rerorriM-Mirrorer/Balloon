@@ -5,13 +5,15 @@ defaults.MovementCloses = false
 defaults.NoPromptCloseDelay = 10
 defaults.AnimatePrompt = true
 defaults.TextSpeed = 10
-defaults.Theme = 'default'
-defaults.Scale = 1.0
-defaults.ShowPortraits = true
+-- New installs use Cioara's FFXI theme; existing saved settings are never overwritten.
+defaults.Theme = 'ffxi'
+defaults.Scale = 1.5
+defaults.ShowPortraits = false
 
 local windower_settings = windower.get_windower_settings()
 defaults.Position = {}
-defaults.Position.X = windower_settings.ui_x_res / 2
-defaults.Position.Y = windower_settings.ui_y_res - 258
+-- Reference: Cioara at 3840x2160 (1922, 1796). Adapt to smaller client windows.
+defaults.Position.X = math.floor(windower_settings.ui_x_res * (1922 / 3840) + 0.5)
+defaults.Position.Y = math.floor(windower_settings.ui_y_res * (1796 / 2160) + 0.5)
 
 return defaults
