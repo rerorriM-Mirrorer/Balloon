@@ -14,7 +14,7 @@ Copy the **entire** `Balloon` addon folder to `Windower4/addons/Balloon/`, retai
 - Existing saved character/global settings take precedence. The supplied XML had a separate global default theme and other characters' preferences; none are forcibly rewritten.
 
 ## FFXI background
-The `ffxi/balloon.png` dialogue-field texture has a more transparent top and a deeper-blue bottom. The original PNG is preserved as `themes/ffxi/balloon-classic.png`. To revert **only** the visual change, replace `balloon.png` with a copy of `balloon-classic.png` while Windower is closed, then reload.
+The `ffxi/balloon.png` dialogue-field texture uses alpha 100 at the top and 240 at the bottom, close to ConsoleBGPlus's documented 100/250 profile, with a dark-blue FFXI palette. Regenerate it with `python tools/build_ffxi_background.py --top 100 --bottom 240` (developer-only Pillow requirement). The original PNG is preserved as `themes/ffxi/balloon-classic.png`. To revert **only** the visual change, replace `balloon.png` with a copy of `balloon-classic.png` while Windower is closed, then reload.
 
 The FFXI nameplate, portraits, fonts, dialogue/control-byte parsing, and other themes remain unchanged.
 
@@ -22,6 +22,8 @@ The FFXI nameplate, portraits, fonts, dialogue/control-byte parsing, and other t
 ```
  //bl                         Show help
  //bl help                    Show help
+ //bl restart                 Restart this addon
+ //bl unload                  Unload this addon
  //bl status                  Current theme, scale, portrait, active state, last close reason
  //bl trace on                Enable compact open/close trace to FFXI chat
  //bl trace off               Disable trace
@@ -39,6 +41,8 @@ The FFXI nameplate, portraits, fonts, dialogue/control-byte parsing, and other t
  //bl test Iroha : Hello!     Display test NPC dialogue
  //bl debug off               Disable verbose legacy diagnostic modes
 ```
+See `docs/FORKS.md` for the comparison with ConsoleBGPlus and newer Balloon forks.
+
 The text-speed implementation is still frame-rate-dependent in this first batch. Improvements there are reserved for the measured rendering pass.
 
 ## Compatibility investigation: SirPopAlot / SlowEnter / NPCMirror
