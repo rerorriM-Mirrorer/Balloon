@@ -423,7 +423,8 @@ function split(str, delim)
 end
 
 windower.register_event("addon command", function(command, ...)
-	local args = L{ ... }
+    if not balloon.initialized then initialize() end
+    local args = L{ ... }
 
 	if command == nil or command == '' then command = 'help' end
 	if command == 'help' then
@@ -443,14 +444,30 @@ windower.register_event("addon command", function(command, ...)
 		t[#t+1] = "     //Balloon move_closes - toggle balloon auto-close on player movement"
 		t[#t+1] = "     //Balloon debug off/all/mode/codes/chunk/process/wrap/chars/elements - enable debug modes"
 		t[#t+1] = "     //Balloon test <name> : <message> - display a test balloon"
+         t[#t+1] = "     //Balloon restart - restart cleanly"
+        t[#t+1] = "     //Balloon unload - unload addon"
         t[#t+1] = "     //Balloon status - show current state and preferences"
         t[#t+1] = "     //Balloon trace on/off - log dialogue opening/closing"
 		t[#t+1] = "　"
-		for tk,tv in pairs(t) do
+		for _,tv in ipairs(t) do
 			windower.add_to_chat(207, windower.to_shift_jis(tv))
 		end
 
-	elseif command == 'status' then
+	elseif command == 'restart' then
+        log('Restarting Balloon.')
+        close('restart')
+        config.save(settings)
+        windower.send_command('lua r balloon')
+        return
+
+    elseif command == 'unload' then
+        log('Unloading Balloon.')
+        close('unload')
+        config.save(settings)
+        windower.send_command('lua u balloon')
+        return
+
+    elseif command == 'status' then
         log('v%s, theme=%s, mode=%d, scale=%.2f, portraits=%s, position=(%.0f,%.0f), active=%s, timed=%s, last_close=%s, trace=%s':format(
             _addon.version, settings.Theme, settings.DisplayMode, settings.Scale,
             tostring(settings.ShowPortraits), settings.Position.X, settings.Position.Y,
