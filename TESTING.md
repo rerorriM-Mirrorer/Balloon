@@ -9,9 +9,9 @@
 4. Use `//bl help`, `//bl status`, then `//bl test TestNPC : Hello from Balloon`.
 
 ## Priority live test sequence (record actual observed results)
-- [ ] Loads at log-in and with `//lua load balloon`, without Lua errors.
+- [ ] Loads at log-in and with `//lua load balloon`, without Lua errors. `//bl restart` and `//bl unload` work once and without leftover UI.
 - [ ] On a character with no saved configuration: defaults are FFXI theme, scale 1.5, portraits off, DisplayMode 2. Existing Cioara/Myrr overrides still win.
-- [ ] New FFXI texture fades at top; compare with `balloon-classic.png`. Check font readability against bright in-game backgrounds.
+- [ ] New FFXI texture uses alpha 100 top/240 bottom, comparable to ConsoleBGPlus's 100/250 setting; compare with `balloon-classic.png`. Check readability on bright scenes.
 - [ ] `//bl delay 1.5` closes promptless text rather than sticking; old timer cannot close a newer line.
 - [ ] `//bl delay 0` closes immediately; invalid scale, delay, or speed is rejected.
 - [ ] With `//bl move_closes`, movement closes only when balloon is active; toggling twice doesn't spawn competing watchers.
@@ -33,7 +33,7 @@
 
 ## Delivery register
 - B01 branch: `development/balloon-b01-cioara-20261014`
-- Commits: `5b8f64a` Cioara defaults; `330b1f5` timers/keyboard/trace; `20038f4` FFXI texture with original preserved; `1347168` portrait/background cache.
+- Source commits include: `5b8f64a` Cioara defaults; `330b1f5` timers/keyboard/trace; `20038f4` initial FFXI texture; `1347168` lookup cache; `021c444` reproducible gradient builder; `780a6c2` calibrated gradient; `b800492` restart/unload; `6ed3965` fork comparison. Use the branch log for the complete sequence.
 - Source of preferences: Cioara settings XML (global display 2, movement off, timeout 10, text speed 10; Cioara position 1922/1796, scale 1.5, theme ffxi, portraits off).
 - Report errors with client, resolution, exact NPC/action, whether SlowEnter/SirPopAlot were loaded, and `//bl status` result.
 
