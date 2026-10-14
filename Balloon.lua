@@ -29,7 +29,7 @@
 --
 _addon.author = 'Originally by Hando, English support added by Yuki & Kenshi, themes added by Ghosty'
 _addon.name = 'Balloon'
-_addon.version = '0.13'
+_addon.version = '0.13-a.20261014.1'
 _addon.commands = {'balloon','bl'}
 
 require('luau')
@@ -83,6 +83,16 @@ balloon.timer_running = false
 balloon.last_text = ''
 balloon.last_mode = 0
 balloon.movement_thread = nil
+balloon.message_serial = 0
+balloon.timed = false
+balloon.last_close_reason = 'none'
+balloon.trace = false
+
+local function trace(event)
+    if balloon.trace then
+        windower.add_to_chat(207, '[Balloon trace] ' .. os.date('%X') .. ' ' .. event)
+    end
+end
 
 -------------------------------------------------------------------------------
 
@@ -92,11 +102,11 @@ function initialize()
 
 	apply_theme()
 
-	--スレッド開始 (Thread start)
-	timer:schedule(0)
-	if settings.MovementCloses then
-		balloon.movement_thread = moving_check:schedule(0)
-	end
+    -- One movement watcher at most. Timed dialogue uses cancellable per-message timers.
+    if settings.MovementCloses and
+       (not balloon.movement_thread or coroutine.status(balloon.movement_thread) == 'dead') then
+        balloon.movement_thread = moving_check:schedule(0)
+    end
 
 	balloon.initialized = true
 end
@@ -113,47 +123,53 @@ function apply_theme()
 end
 
 function open(timed)
-	if not balloon.initialized then
-		initialize()
-	end
+    if not balloon.initialized then initialize() end
 
-	if timed then
-		balloon.close_timer = settings.NoPromptCloseDelay
-		ui.timer_text:text(''..balloon.close_timer)
-	end
+    balloon.message_serial = balloon.message_serial + 1
+    local serial = balloon.message_serial
+    balloon.on = true
+    balloon.timed = timed
+    balloon.waiting_to_close = timed -- legacy status field; movement does not modify it
+    ui:show(timed)
+    trace('open #' .. serial .. (timed and ' timed' or ' prompted'))
 
-	ui:show(timed)
+    if not timed then return end
 
-	balloon.waiting_to_close = timed
-	balloon.on = true
+    local delay = tonumber(settings.NoPromptCloseDelay) or 10
+    delay = math.max(0, delay)
+    balloon.close_timer = delay
+    ui.timer_text:text(tostring(math.ceil(delay)))
+
+    -- A new dialogue line or a manual close invalidates this timer.
+    coroutine.schedule(function()
+        local remaining = delay
+        local shown = math.ceil(delay)
+        while remaining > 0 do
+            local step = math.min(remaining, 0.25)
+            coroutine.sleep(step)
+            if serial ~= balloon.message_serial or not balloon.on then return end
+            remaining = math.max(0, remaining - step)
+            balloon.close_timer = remaining
+            local next_shown = math.ceil(remaining)
+            if next_shown ~= shown and remaining > 0 then
+                shown = next_shown
+                ui.timer_text:text(tostring(shown))
+            end
+        end
+        if serial == balloon.message_serial and balloon.on then close('timeout') end
+    end, 0)
 end
 
-function close()
-	ui:hide()
-
-	balloon.on = false
-	balloon.waiting_to_close = false
-end
-
-function timer()
-	-- from Aelmar's npcbox https://www.ffxiah.com/forum/topic/56227/balloon-story-addon/2/#3627878
-	-- thanks for letting me use bits from it, Aelmar!
-    if balloon.timer_running then return end
-    balloon.timer_running = true
-    while true do
-		if balloon.waiting_to_close then
-			if balloon.close_timer == 0 then
-				close()
-			end
-			if balloon.close_timer > 0 then
-				ui.timer_text:text(balloon.close_timer..'')
-			end
-			if balloon.close_timer >= 0 then
-				balloon.close_timer = balloon.close_timer - 1
-			end
-		end
-        coroutine.sleep(1)
+function close(reason)
+    if balloon.on then
+        balloon.last_close_reason = reason or 'event'
+        trace('close #' .. balloon.message_serial .. ' ' .. balloon.last_close_reason)
     end
+    balloon.message_serial = balloon.message_serial + 1
+    ui:hide()
+    balloon.on = false
+    balloon.timed = false
+    balloon.waiting_to_close = false
 end
 
 windower.register_event('load',function()
@@ -169,33 +185,22 @@ windower.register_event('login',function()
 end)
 
 function moving_check()
-	local p = windower.ffxi.get_player()
-	if p == nil then return end
-
-	local me,x,y
-
-	while true do
-		me = windower.ffxi.get_mob_by_id(p.id)
-		if me ~= nil then
-			x = string.format("%6d",me.x)
-			y = string.format("%6d",me.y)
-			--if x ~= old_x and y ~= old_y then
-			if (tonumber(x) < tonumber(balloon.old_x) - 1 or tonumber(x) > tonumber(balloon.old_x) + 1) or (tonumber(y) < tonumber(balloon.old_y) - 1 or tonumber(y) > tonumber(balloon.old_y) + 1) then
-				balloon.moving = true
-				balloon.old_y = y
-				balloon.old_x = x
-			else
-				balloon.moving = false
-			end
-		end
-		--wait
-		balloon.waiting_to_close = true
-		coroutine.sleep(settings.NoPromptCloseDelay)
-		if balloon.moving and settings.MovementCloses and balloon.waiting_to_close then
-			close()
-		end
-	end
-
+    local old_x, old_y = nil, nil
+    while settings.MovementCloses do
+        local p = windower.ffxi.get_player()
+        local me = p and windower.ffxi.get_mob_by_id(p.id)
+        if me then
+            if old_x and old_y and balloon.on
+               and (math.abs(me.x - old_x) > 1 or math.abs(me.y - old_y) > 1) then
+                close('movement')
+            end
+            old_x, old_y = me.x, me.y
+        else
+            old_x, old_y = nil, nil
+        end
+        coroutine.sleep(0.25)
+    end
+    balloon.movement_thread = nil
 end
 
 windower.register_event('incoming chunk',function(id,original,modified,injected,blocked)
@@ -203,7 +208,7 @@ windower.register_event('incoming chunk',function(id,original,modified,injected,
 
 	--会話中かの確認 (Check if you have left a conversation)
 	if S{LEAVE_CONVERSATION_PACKET, ZONE_OUT_PACKET}[id] then
-		close()
+		close('conversation_exit')
 	end
 end)
 
@@ -217,13 +222,14 @@ windower.register_event('incoming text',function(original,modified,mode,modified
 	-- blank prompt line that auto-continues itself,
 	-- usually used to clear a space for a scene change?
 	if original:endswith(AUTO_PROMPT_CHARS) then
-		close()
+		close('automatic_prompt')
 		return
 	end
 
 	-- print debug info
 	if S{'codes', 'all'}[balloon.debug] then print("codes: " .. codes(original)) end
 
+	if not balloon.initialized then initialize() end
 	local result = original
 	if settings.DisplayMode >= 1 then
 		result = process_balloon(original, mode)
@@ -419,6 +425,7 @@ end
 windower.register_event("addon command", function(command, ...)
 	local args = L{ ... }
 
+	if command == nil or command == '' then command = 'help' end
 	if command == 'help' then
 		local t = {}
 		t[#t+1] = "Balloon(Bl)" .. "Ver." .._addon.version
@@ -436,12 +443,28 @@ windower.register_event("addon command", function(command, ...)
 		t[#t+1] = "     //Balloon move_closes - toggle balloon auto-close on player movement"
 		t[#t+1] = "     //Balloon debug off/all/mode/codes/chunk/process/wrap/chars/elements - enable debug modes"
 		t[#t+1] = "     //Balloon test <name> : <message> - display a test balloon"
+        t[#t+1] = "     //Balloon status - show current state and preferences"
+        t[#t+1] = "     //Balloon trace on/off - log dialogue opening/closing"
 		t[#t+1] = "　"
 		for tk,tv in pairs(t) do
 			windower.add_to_chat(207, windower.to_shift_jis(tv))
 		end
 
-	elseif command == '1' then
+	elseif command == 'status' then
+        log('v%s, theme=%s, mode=%d, scale=%.2f, portraits=%s, position=(%.0f,%.0f), active=%s, timed=%s, last_close=%s, trace=%s':format(
+            _addon.version, settings.Theme, settings.DisplayMode, settings.Scale,
+            tostring(settings.ShowPortraits), settings.Position.X, settings.Position.Y,
+            tostring(balloon.on), tostring(balloon.timed), balloon.last_close_reason,
+            tostring(balloon.trace)))
+
+    elseif command == 'trace' then
+        local value = args[1] and args[1]:lower() or nil
+        if value == 'on' then balloon.trace = true
+        elseif value == 'off' then balloon.trace = false
+        else balloon.trace = not balloon.trace end
+        log('dialogue trace ' .. (balloon.trace and 'on' or 'off'))
+
+    elseif command == '1' then
 		settings.DisplayMode = 1
 		log("モード (mode) 1　　:吹き出し表示＆ログ非表示 (Show balloon & hide log)")
 
@@ -478,7 +501,9 @@ windower.register_event("addon command", function(command, ...)
 	elseif command == 'scale' then
 		local old_scale = settings.Scale
 		if not args:empty() then
-			settings.Scale = tonumber(args[1])
+			local value = tonumber(args[1])
+			if not value or value ~= value or value < 0.25 or value > 4 then log('Scale must be between 0.25 and 4.'); return end
+			settings.Scale = value
 			ui:scale(settings.Scale)
 			log("scale changed from %.2f to %.2f":format(old_scale, settings.Scale))
 		else
@@ -488,16 +513,20 @@ windower.register_event("addon command", function(command, ...)
 	elseif command == 'delay' then
 		local old_delay = settings.NoPromptCloseDelay
 		if not args:empty() then
-			settings.NoPromptCloseDelay = tonumber(args[1])
-			log("promptless close delay changed from %d to %d":format(old_delay, settings.NoPromptCloseDelay))
+			local value = tonumber(args[1])
+			if not value or value ~= value or value < 0 or value > 300 then log('Delay must be 0 to 300 seconds.'); return end
+			settings.NoPromptCloseDelay = value
+			log("promptless close delay changed from %.2f to %.2f":format(old_delay, settings.NoPromptCloseDelay))
 		else
-			log("current promptless close delay is %d (default: %d)":format(old_delay, defaults.NoPromptCloseDelay))
+			log("current promptless close delay is %.2f (default: %.2f)":format(old_delay, defaults.NoPromptCloseDelay))
 		end
 
 	elseif command == 'text_speed' then
 		local old_speed = settings.TextSpeed
 		if not args:empty() then
-			settings.TextSpeed = tonumber(args[1])
+			local value = tonumber(args[1])
+			if not value or value ~= value or value < 0 or value > 200 or value % 1 ~= 0 then log('Text speed must be a whole number from 0 to 200.'); return end
+			settings.TextSpeed = value
 			log("text speed changed from %d to %d":format(old_speed, settings.TextSpeed))
 		else
 			log("current text speed is %d (default: %d)":format(settings.TextSpeed, defaults.TextSpeed))
@@ -516,11 +545,11 @@ windower.register_event("addon command", function(command, ...)
 	elseif command == 'move_closes' then
 		settings.MovementCloses = not settings.MovementCloses
 		if settings.MovementCloses then
-			balloon.movement_thread = moving_check:schedule(0)
-		else
-			if balloon.movement_thread ~= nil and coroutine.status(balloon.movement_thread) ~= 'dead' then
-				coroutine.close(balloon.movement_thread)
+			if not balloon.movement_thread or coroutine.status(balloon.movement_thread) == 'dead' then
+				balloon.movement_thread = moving_check:schedule(0)
 			end
+		else
+			-- Watcher exits safely at its next tick; Lua 5.1 has no coroutine.close.
 		end
 
 		log("close balloons on player movement - " .. (settings.MovementCloses and "on" or "off"))
@@ -534,9 +563,11 @@ windower.register_event("addon command", function(command, ...)
 		log("set debug mode " .. balloon.debug)
 
 	elseif command == 'test' then
-		process_balloon(args:concat(' '), 150)
-
-	end
+        process_balloon(args:concat(' '), 150)
+    else
+        log('Unknown Balloon command: ' .. tostring(command))
+        windower.send_command('balloon help')
+    end
 
 	config.save(settings)
 end)
@@ -555,22 +586,25 @@ windower.register_event("prerender",function()
 end)
 
 windower.register_event('keyboard',function(key_id,pressed,flags,blocked)
-	if windower.ffxi.get_info().chat_open or blocked then return end
-	if balloon.on == true then
+	-- Release cleanup must happen even if another addon blocked the key event.
+    if (key_id == ENTER_KEY or key_id == SCROLL_LOCK_KEY) and not pressed then
+        balloon.keydown = false
+    end
+    if windower.ffxi.get_info().chat_open or blocked then return end
+    if balloon.on == true then
 		if key_id == ENTER_KEY and pressed and not balloon.keydown then
 			balloon.keydown = true
-			close()
+			close('enter')
 		end
 		if key_id == SCROLL_LOCK_KEY and pressed and not balloon.keydown then
 			balloon.keydown = true
 			if not ui:hidden() then
 				ui:hide()
 			else
-				ui:show()
+				ui:show(balloon.timed)
 			end
 		end
 	end
-	if S{ENTER_KEY, SCROLL_LOCK_KEY}[key_id] and not pressed then balloon.keydown = false end
 end)
 
 windower.register_event("mouse",function(type,x,y,delta,blocked)
