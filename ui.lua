@@ -56,6 +56,9 @@ function ui:load(settings, theme_options)
     self._scale = settings.Scale
     self._global_show_portraits = settings.ShowPortraits
     self._theme_options = theme_options
+    -- Theme, zone variant and portrait preference are the cache boundaries.
+    self._portrait_path_cache = {}
+    self._background_path_cache = {}
 
     self._dialogue_settings.path = theme_options.balloon_background
     self._dialogue_settings.color = {}
@@ -255,43 +258,46 @@ function ui:set_type(type)
 end
 
 function ui:set_character(name)
-    self.name_text:text(' '..name)
+    self.name_text:text(' ' .. name)
 
+    -- Repeated dialogue from the same NPC must not probe the filesystem every line.
     local info = windower.ffxi.get_info()
-    local zone_name = res.zones[info.zone].en
-    local s = false
-    if zone_name:endswith('[S]') then
-        s = true
-    end
+    local zone = info and res.zones[info.zone]
+    local s = zone and zone.en and zone.en:endswith('[S]') or false
+    local cache_key = name .. (s and ':S' or ':normal')
 
     if self._global_show_portraits and self._theme_options.portrait then
-        local theme_portrait = (windower.addon_path..'themes/'..self._theme..'/portraits/%s.png'):format(name)
-        local theme_portrait_s = (windower.addon_path..'themes/'..self._theme..'/portraits/%s (S).png'):format(name)
-        local portrait = (windower.addon_path..'portraits/%s.png'):format(name)
-        local portrait_s = (windower.addon_path..'portraits/%s (S).png'):format(name)
-        if s and windower.file_exists(theme_portrait_s) then
-            self.portrait:path(theme_portrait_s)
-            self._has_portrait = true
-        elseif s and windower.file_exists(portrait_s) then
-            self.portrait:path(portrait_s)
-            self._has_portrait = true
-        elseif windower.file_exists(theme_portrait) then
-            self.portrait:path(theme_portrait)
-            self._has_portrait = true
-        elseif windower.file_exists(portrait) then
-            self.portrait:path(portrait)
-            self._has_portrait = true
-        else
-            self._has_portrait = false
+        local path = self._portrait_path_cache[cache_key]
+        if path == nil then
+            local theme_root = windower.addon_path .. 'themes/' .. self._theme .. '/portraits/'
+            local addon_root = windower.addon_path .. 'portraits/'
+            local candidates = {}
+            if s then
+                candidates[#candidates + 1] = theme_root .. name .. ' (S).png'
+                candidates[#candidates + 1] = addon_root .. name .. ' (S).png'
+            end
+            candidates[#candidates + 1] = theme_root .. name .. '.png'
+            candidates[#candidates + 1] = addon_root .. name .. '.png'
+            path = false
+            for _, candidate in ipairs(candidates) do
+                if windower.file_exists(candidate) then path = candidate; break end
+            end
+            self._portrait_path_cache[cache_key] = path
         end
+        self._has_portrait = path ~= false
+        if self._has_portrait then self.portrait:path(path) end
     else
         self._has_portrait = false
     end
 
-    -- set a custom balloon based on npc name, if an image for them exists
-    local fname = windower.addon_path..'themes/'..self._theme..('/characters/%s.png'):format(name)
-	if windower.file_exists(fname) then
-		self:update_message_bg(fname)
+    local path = self._background_path_cache[name]
+    if path == nil then
+        local candidate = windower.addon_path .. 'themes/' .. self._theme .. '/characters/' .. name .. '.png'
+        path = windower.file_exists(candidate) and candidate or false
+        self._background_path_cache[name] = path
+    end
+    if path then
+        self:update_message_bg(path)
         return true
     end
     return false
