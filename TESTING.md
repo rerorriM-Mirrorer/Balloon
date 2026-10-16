@@ -39,3 +39,9 @@
 
 ## Historical results
 None yet. Do not mark tests passed without observing them. Record later corrections without erasing the original findings.
+
+## Agent instructions adoption — 2026-10-16
+
+- Added `AGENTS.md` at this development branch's repository root to direct coding agents to the current workflow and testing records, with a canonical NPCMirror fallback when documents are missing.
+- Documentation commit: [`654def47`](https://github.com/rerorriM-Mirrorer/Balloon/commit/654def47c42b54a3070436c8a2a2516e2f4fc668).
+- No addon code was changed or game testing performed as part of this documentation update; all previous test instructions and observations remain above.
