@@ -1,3 +1,43 @@
+# TESTING.md — Balloon Batch 02 (2026-11-01)
+
+**Current test:** Fresh-install placement and classic FFXI theme, on `development/balloon-b02-centered-20261101`. This change has NOT been tested in a running Windower/FFXI client. `master` is unchanged.
+
+## B02 installation and verification
+
+1. Back up your existing `Windower4/addons/Balloon/` and especially `Balloon/data/settings.xml`.
+2. Download the full B02 branch ZIP from GitHub, extract its repository folder, and install all its contents under `Windower4/addons/Balloon/` (not nested under a second `Balloon` folder). Keep `themes/`, the Lua files, `README.md`, `WORKFLOW.md` and this `TESTING.md` together.
+3. For a genuine **fresh settings** test on ONE character, temporarily move `data/settings.xml` outside the addon. Leave it backed up: do not permanently delete your settings. A fresh source install with an old settings file will intentionally keep old character/global coordinates and theme.
+4. Load with `//lua load balloon` (or log in), check `//bl status`, and run `//bl test TestNPC : Hello from Balloon`.
+5. On 3840×2160, expect the **center of the dialogue background** to be (1920,1728), exactly 50% across and 80% down. It is not the top-left corner. Confirm the original upstream FFXI backdrop is in use (not the Batch 01 custom gradient).
+6. Drag the balloon, then use `//bl reset`. Confirm it returns to (1920,1728), is still fully visible, and keeps the layout and text legible.
+7. Repeat at a smaller active game/UI resolution if available: 1280×720 should anchor at (640,576); 960×540 should anchor at (480,432). Observe clipping and alignment, especially with scale 1.5.
+8. Restore the backed-up settings after fresh-default testing and reload. Confirm custom position / text speed / theme / delay still take precedence. On the user's November 1 example, Cioara has custom `xi` theme and Clairvaux has (1965,1720); `xi` is a locally renamed theme not included in this repository, so restore that local theme directory if needed.
+9. Recheck promptless timeout, prompts, movement and Enter behavior from the B01 tests below; report any changes or Lua errors.
+
+### B02 acceptance checklist
+
+- [ ] Fresh config selects theme `ffxi` and original image, with mode 2, scale 1.5, portraits off, animated prompt on, text speed 10, promptless delay 10, movement closes off.
+- [ ] Fresh config at 3840×2160 centers backdrop at (1920,1728).
+- [ ] `//bl reset` returns to same resolution-scaled anchor after a drag.
+- [ ] 1280×720 / 960×540 default anchors as above, with acceptable on-screen visibility.
+- [ ] Existing custom per-character/global XML survives an upgrade; local `xi` theme must exist if referenced by saved settings.
+- [ ] `//bl status` shows version `0.13-a.20261101.2` and current settings; no loading errors.
+- [ ] Basic prompted/timed dialogue, Enter, Scroll Lock, movement watcher, and reload remain functional.
+
+### B02 scope, verification and source
+
+- **Implemented:** `defaults.lua` uses 50%/80% of Windower `ui_x_res`/`ui_y_res`; original upstream FFXI PNG is the normal `balloon.png` (Git blob `64f1082a...` matches StarlitGhost/Balloon); previous gradient retained as `balloon-gradient.png`; version string updated.
+- **Intentionally unchanged:** Text speed, delay, movement-closing behavior and all saved XML; no timer or input redesign. The November 1 user XML is a preference reference, not a replacement preset.
+- **Static/source verification:** The source tree and original-art blob were inspected using GitHub; simple position arithmetic gives the anchors above. No Lua 5.1/Windower runtime is available in this execution environment; game behavior is **not verified**.
+- **Code commits:** `fa027a8` (placement and artwork), `600cb99` (version). Documentation commits follow on the same branch; see current branch history.
+- **Feedback to record:** screenshot or description of position, tested client resolution, whether existing `settings.xml` was moved, exact theme, `//bl status`, and any reported errors.
+
+## B01 historical testing instructions (preserved)
+
+The following was recorded for Batch 01 on October 14–16, before Batch 02 restored the original background. Descriptions of the custom background as the active `ffxi/balloon.png` are **historical B01 expectations**, not B02 defaults.
+
+---
+
 # TESTING.md — Balloon Batch 01
 
 **Read this before installing.** This branch contains unverified Windower-side changes. It has NOT been smoke-tested or live-tested in FFXI. The original `master` and `themes/ffxi/balloon-classic.png` remain preserved.
