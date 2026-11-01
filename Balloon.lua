@@ -29,7 +29,7 @@
 --
 _addon.author = 'Originally by Hando, English support added by Yuki & Kenshi, themes added by Ghosty'
 _addon.name = 'Balloon'
-_addon.version = '0.13-a.20261014.1'
+_addon.version = '0.13-a.20261101.2'
 _addon.commands = {'balloon','bl'}
 
 require('luau')
