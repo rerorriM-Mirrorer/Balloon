@@ -2,7 +2,7 @@
 
 Windower 4 NPC dialogue balloons; based on Hando, Yuki, Kenshi, and Ghosty's Balloon 0.13. Original copyright/license terms remain in `Balloon.lua`.
 
-**Status:** Batch 02 is a fresh-install positioning/theme test on `development/balloon-b02-centered-20261101`. It has NOT been smoke-tested or live-tested in FFXI. `master` remains the preserved upstream baseline.
+**Status:** B02 countdown-hidden patch on `development/balloon-b02-hide-timer-20261111`, based on the centered/theme B02 build. Not yet tested in FFXI. `master` and the prior B02 branch are preserved.
 
 ## Installation / updating
 Download the complete Batch 02 branch ZIP from GitHub, extract the repository folder, and copy the addon contents to `Windower4/addons/Balloon/` (including `Balloon.lua`, `defaults.lua`, `ui.lua`, `theme.lua`, and all `themes/` assets). Back up the installed addon folder and its `data/settings.xml` first. For a **genuine fresh-default test**, temporarily move the existing `data/settings.xml` somewhere safe before loading on ONE character. Restore it afterward to recover character-specific overrides. Merely reinstalling the Lua and image files will not reset saved settings.
@@ -51,5 +51,6 @@ Balloon remains presentation-only. It never injects NPC menu choices or intentio
 Test at the same NPC with `//bl 0`, then `//bl 2`, then `//bl text_speed 0`. Use `//bl trace on` to record visual presentation transitions. Trace has second-resolution timestamps; it does not prove precise subsecond causality.
 
 ## Changelog
+- **Countdown-hidden patch (2026-11-11, UNTESTED IN GAME):** Timed/promptless balloon countdown numbers are no longer displayed. Only `ui.lua` behavior changes; the saved delay and all internal expiration/cancellation logic remain unchanged. A one-file update is sufficient over B02. See current `TESTING.md` for checks.
 - **Batch 02 (2026-11-01, UNTESTED IN GAME):** New-install anchor centered at 50% width / 80% height across client resolutions; upstream classic FFXI background restored as default asset; optional custom gradient retained separately; version bumped for testing; saved settings unaffected.
 - **Batch 01 (2026-10-14, UNTESTED IN GAME):** Cioara-based defaults; translucent FFXI field with original backup; per-message cancellable timeout (including decimals); one cooperative movement watcher; keyboard release cleanup; correct timed Scroll Lock reopen; input validation; `status` and `trace`; NPC portrait/background lookup cache; setup/testing documentation.
