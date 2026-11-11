@@ -225,7 +225,8 @@ function ui:show(timed)
         self.prompt:show()
         self.timer_text:hide()
     else
-        self.timer_text:show()
+        -- Timed dialogue still expires normally; only its countdown display is hidden.
+        self.timer_text:hide()
         self.prompt:hide()
     end
 
