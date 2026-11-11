@@ -1,3 +1,27 @@
+# TESTING.md — Balloon B02 countdown-hidden patch (2026-11-11)
+
+**Current patch:** `development/balloon-b02-hide-timer-20261111`, based on the latest B02 centered-theme work. **No live Windower/FFXI test yet.** The original B02 branch and `master` remain untouched.
+
+## Installation and verification
+
+1. Back up `Balloon/ui.lua`. For the minimal patch, replace only this one file with the patched file from the branch, or download the branch ZIP and copy only `ui.lua` into `Windower4/addons/Balloon/`. Keep the existing data/settings and theme assets.
+2. Reload with `//lua reload balloon` (or use `//bl restart`).
+3. Trigger a normal **promptless/timed** NPC message: the text and background should still appear, but the numeric countdown should be invisible.
+4. Confirm the message still disappears after `NoPromptCloseDelay` seconds (the saved setting is preserved). With `//bl delay 1.5`, it should close after about 1.5 seconds, with no visible countdown.
+5. Trigger prompted NPC dialogue: the ordinary advance arrow still appears. Scroll Lock hide/reopen should not resurrect the timer.
+6. Check a repeated NPC interaction or quick next line: the previous message's timeout must not prematurely close the new message.
+
+### Change and verification
+
+- **Code:** `ui.lua` changes only the timed-dialogue UI visibility, `self.timer_text:show()` to `self.timer_text:hide()`. `Balloon.lua` is **not modified**; the same countdown timer, timeout cancellation, dialogue close, and `//bl delay` behavior remain.
+- **Static review:** the sole display call was identified in `ui:show(timed)`. The timer updates and expiration remain in `Balloon.lua`. A static grep/source comparison does not prove in-game behavior.
+- **Known limitations:** the timer text object may still be created and updated internally as before; nothing renders it. No new configuration toggle or new visuals.
+- **Delivery:** patch commit `bbde48f24ce46298a92133d68004448eedecab2e`, plus documentation updates on the same branch.
+
+## Earlier cumulative testing record (preserved below)
+
+---
+
 # TESTING.md — Balloon Batch 02 (2026-11-01)
 
 **Current test:** Fresh-install placement and classic FFXI theme, on `development/balloon-b02-centered-20261101`. This change has NOT been tested in a running Windower/FFXI client. `master` is unchanged.
