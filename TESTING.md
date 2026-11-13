@@ -30,9 +30,10 @@
 
 - **Code:** `defaults.lua` adds `CenterTextVertically=false`; `ui.lua` measures the full wrapped message with `:extents()`, computes a centered vertical offset when the message fits, and restores the currently revealed text after measurement. `Balloon.lua` adds the `center_text` command, help/status reporting, and version `0.13-a.20261113.1`.
 - **Measurement basis:** Windower's `texts` library exposes `:extents()`, backed by `windower.text.get_extents()`, which returns rendered width and height in pixels. The code uses the measured height rather than estimating from character count or line count.
-- **Static review:** Source paths and settings flow were inspected. No Lua 5.1 interpreter or Windower runtime has been used in this pass. This is not a smoke or live test.
+- **Static review:** Source paths, setting persistence, command parsing, and the full-message measurement/restore sequence were reviewed. No Lua 5.1 interpreter or Windower runtime has been used in this pass. This is not a smoke or live test.
+- **API source verification:** The Windower Lua `texts` library defines `:extents()` as a wrapper around `windower.text.get_extents()`; the API returns rendered width and height in pixels. This verifies the measurement API exists, not the final visual placement in-game.
 - **Live status:** Pending user testing in FFXI. Record client resolution, theme, scale, portrait state, sample message length, and any visual overlap or Lua errors.
-- **Delivery:** Pending commit and push.
+- **Delivery:** Feature commit `ac705221a7a5be232316b52493305655bf5c96b5` is on this branch; the branch push was confirmed. This follow-up commit corrects the install and delivery notes.
 
 ---
 

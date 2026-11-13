@@ -5,9 +5,9 @@ Windower 4 NPC dialogue balloons; based on Hando, Yuki, Kenshi, and Ghosty's Bal
 **Status:** B03 vertical text-centering option on `development/balloon-b03-vertical-text-center-20261113`, based on the B02 countdown-hidden build. Not yet tested in FFXI. `master` and prior development branches are preserved.
 
 ## Installation / updating
-Download the complete Batch 02 branch ZIP from GitHub, extract the repository folder, and copy the addon contents to `Windower4/addons/Balloon/` (including `Balloon.lua`, `defaults.lua`, `ui.lua`, `theme.lua`, and all `themes/` assets). Back up the installed addon folder and its `data/settings.xml` first. For a **genuine fresh-default test**, temporarily move the existing `data/settings.xml` somewhere safe before loading on ONE character. Restore it afterward to recover character-specific overrides. Merely reinstalling the Lua and image files will not reset saved settings.
+Download the complete B03 branch ZIP from GitHub, extract the repository folder, and copy the addon contents to `Windower4/addons/Balloon/` (including `Balloon.lua`, `defaults.lua`, `ui.lua`, `theme.lua`, and all `themes/` assets). Back up the installed addon folder and its `data/settings.xml` first. For a **genuine fresh-default test**, temporarily move the existing `data/settings.xml` somewhere safe before loading on ONE character. Restore it afterward to recover character-specific overrides. Merely reinstalling the Lua and image files will not reset saved settings.
 
-## Fresh-install defaults (Batch 02)
+## Fresh-install defaults (Batch 02 baseline with B03 alignment option)
 - Display mode 2 (balloon and chat log), FFXI theme, scale 1.5, portraits **off**.
 - Prompt bounce on; text speed 10 characters/frame; promptless timeout 10 seconds; movement closing off.
 - Vertical text centering off by default; enable it with `//bl center_text on`.
@@ -25,7 +25,7 @@ The FFXI nameplate, portraits, fonts, dialogue/control-byte parsing, and other t
  //bl help                    Show help
  //bl restart                 Restart this addon
  //bl unload                  Unload this addon
- //bl status                  Current theme, scale, portrait, active state, last close reason
+ //bl status                  Current theme, scale, portrait, text alignment, active state, last close reason
  //bl trace on                Enable compact open/close trace to FFXI chat
  //bl trace off               Disable trace
  //bl 0                       Hide new balloons; leave game log
