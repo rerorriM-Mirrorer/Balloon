@@ -10,6 +10,8 @@ defaults.TextSpeed = 10
 defaults.Theme = 'ffxi'
 defaults.Scale = 1.5
 defaults.ShowPortraits = false
+-- Keep the original top-aligned layout unless the user opts into vertical centering.
+defaults.CenterTextVertically = false
 
 local windower_settings = windower.get_windower_settings()
 defaults.Position = {}

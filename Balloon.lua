@@ -29,7 +29,7 @@
 --
 _addon.author = 'Originally by Hando, English support added by Yuki & Kenshi, themes added by Ghosty'
 _addon.name = 'Balloon'
-_addon.version = '0.13-a.20261101.2'
+_addon.version = '0.13-a.20261113.1'
 _addon.commands = {'balloon','bl'}
 
 require('luau')
@@ -442,6 +442,7 @@ windower.register_event("addon command", function(command, ...)
 		t[#t+1] = "     //Balloon animate - toggle the advancement prompt indicator bouncing"
 		t[#t+1] = "     //Balloon portrait - toggle the display of character portraits, if the theme has settings for them"
 		t[#t+1] = "     //Balloon move_closes - toggle balloon auto-close on player movement"
+		t[#t+1] = "     //Balloon center_text [on|off] - vertically center dialogue text (toggle if omitted)"
 		t[#t+1] = "     //Balloon debug off/all/mode/codes/chunk/process/wrap/chars/elements - enable debug modes"
 		t[#t+1] = "     //Balloon test <name> : <message> - display a test balloon"
          t[#t+1] = "     //Balloon restart - restart cleanly"
@@ -468,9 +469,9 @@ windower.register_event("addon command", function(command, ...)
         return
 
     elseif command == 'status' then
-        log('v%s, theme=%s, mode=%d, scale=%.2f, portraits=%s, position=(%.0f,%.0f), active=%s, timed=%s, last_close=%s, trace=%s':format(
+        log('v%s, theme=%s, mode=%d, scale=%.2f, portraits=%s, center_text=%s, position=(%.0f,%.0f), active=%s, timed=%s, last_close=%s, trace=%s':format(
             _addon.version, settings.Theme, settings.DisplayMode, settings.Scale,
-            tostring(settings.ShowPortraits), settings.Position.X, settings.Position.Y,
+            tostring(settings.ShowPortraits), tostring(settings.CenterTextVertically), settings.Position.X, settings.Position.Y,
             tostring(balloon.on), tostring(balloon.timed), balloon.last_close_reason,
             tostring(balloon.trace)))
 
@@ -558,6 +559,21 @@ windower.register_event("addon command", function(command, ...)
 		settings.ShowPortraits = not settings.ShowPortraits
 		apply_theme()
 		log("portrait display - " .. (settings.ShowPortraits and "on" or "off"))
+
+	elseif command == 'center_text' then
+        local value = args[1] and args[1]:lower() or nil
+        if value == 'on' then
+            settings.CenterTextVertically = true
+        elseif value == 'off' then
+            settings.CenterTextVertically = false
+        elseif value == nil then
+            settings.CenterTextVertically = not settings.CenterTextVertically
+        else
+            log('Use //bl center_text [on|off].')
+            return
+        end
+        ui:set_center_text_vertically(settings.CenterTextVertically)
+        log('vertical text centering ' .. (settings.CenterTextVertically and 'on' or 'off'))
 
 	elseif command == 'move_closes' then
 		settings.MovementCloses = not settings.MovementCloses

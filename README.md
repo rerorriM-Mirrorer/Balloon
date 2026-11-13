@@ -2,7 +2,7 @@
 
 Windower 4 NPC dialogue balloons; based on Hando, Yuki, Kenshi, and Ghosty's Balloon 0.13. Original copyright/license terms remain in `Balloon.lua`.
 
-**Status:** B02 countdown-hidden patch on `development/balloon-b02-hide-timer-20261111`, based on the centered/theme B02 build. Not yet tested in FFXI. `master` and the prior B02 branch are preserved.
+**Status:** B03 vertical text-centering option on `development/balloon-b03-vertical-text-center-20261113`, based on the B02 countdown-hidden build. Not yet tested in FFXI. `master` and prior development branches are preserved.
 
 ## Installation / updating
 Download the complete Batch 02 branch ZIP from GitHub, extract the repository folder, and copy the addon contents to `Windower4/addons/Balloon/` (including `Balloon.lua`, `defaults.lua`, `ui.lua`, `theme.lua`, and all `themes/` assets). Back up the installed addon folder and its `data/settings.xml` first. For a **genuine fresh-default test**, temporarily move the existing `data/settings.xml` somewhere safe before loading on ONE character. Restore it afterward to recover character-specific overrides. Merely reinstalling the Lua and image files will not reset saved settings.
@@ -10,6 +10,7 @@ Download the complete Batch 02 branch ZIP from GitHub, extract the repository fo
 ## Fresh-install defaults (Batch 02)
 - Display mode 2 (balloon and chat log), FFXI theme, scale 1.5, portraits **off**.
 - Prompt bounce on; text speed 10 characters/frame; promptless timeout 10 seconds; movement closing off.
+- Vertical text centering off by default; enable it with `//bl center_text on`.
 - Dialogue background **center** at 50% of client width and 80% of client height: `(1920, 1728)` at 3840×2160, `(640, 576)` at 1280×720. The anchor scales with the active client resolution; `//bl reset` returns to it.
 - Existing saved character/global settings take precedence and are never forcibly rewritten. The newer November 1 XML has movement closing on globally, Cioara's text speed 2 / delay 6 / `xi` theme, and Clairvaux's position `(1965,1720)`; those are preserved as *saved preferences*, not automatically promoted into these new-install defaults.
 
@@ -36,6 +37,9 @@ The FFXI nameplate, portraits, fonts, dialogue/control-byte parsing, and other t
  //bl delay 1.5               Set a decimal promptless timeout (0 through 300 seconds)
  //bl text_speed 10           Characters per frame (0 through 200; 0 = instant)
  //bl move_closes             Toggle close on player movement
+ //bl center_text on          Vertically center dialogue text
+ //bl center_text off         Restore top-aligned dialogue text
+ //bl center_text             Toggle vertical text centering
  //bl animate                 Toggle prompt animation
  //bl reset                   Center dialogue at 50% width / 80% height
  //bl test Iroha : Hello!     Display test NPC dialogue
@@ -51,6 +55,7 @@ Balloon remains presentation-only. It never injects NPC menu choices or intentio
 Test at the same NPC with `//bl 0`, then `//bl 2`, then `//bl text_speed 0`. Use `//bl trace on` to record visual presentation transitions. Trace has second-resolution timestamps; it does not prove precise subsecond causality.
 
 ## Changelog
+- **B03 vertical text centering (2026-11-13, UNTESTED IN GAME):** Added optional `CenterTextVertically` setting and `//bl center_text [on|off]` command. Balloon measures the full wrapped message with Windower text extents before revealing it, centers messages that fit, and leaves over-height messages top-aligned. Disabled by default. Existing settings are preserved.
 - **Countdown-hidden patch (2026-11-11, UNTESTED IN GAME):** Timed/promptless balloon countdown numbers are no longer displayed. Only `ui.lua` behavior changes; the saved delay and all internal expiration/cancellation logic remain unchanged. A one-file update is sufficient over B02. See current `TESTING.md` for checks.
 - **Batch 02 (2026-11-01, UNTESTED IN GAME):** New-install anchor centered at 50% width / 80% height across client resolutions; upstream classic FFXI background restored as default asset; optional custom gradient retained separately; version bumped for testing; saved settings unaffected.
 - **Batch 01 (2026-10-14, UNTESTED IN GAME):** Cioara-based defaults; translucent FFXI field with original backup; per-message cancellable timeout (including decimals); one cooperative movement watcher; keyboard release cleanup; correct timed Scroll Lock reopen; input validation; `status` and `trace`; NPC portrait/background lookup cache; setup/testing documentation.

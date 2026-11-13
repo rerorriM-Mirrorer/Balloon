@@ -22,6 +22,8 @@ ui._hidden = true
 ui._current_text = ''
 ui._chars_shown = 0
 ui._has_portrait = false
+ui._center_text_vertically = false
+ui._message_text_center_offset_y = 0
 
 ui._dialogue_settings = {}
 ui._system_settings = {}
@@ -55,6 +57,8 @@ function ui:load(settings, theme_options)
     self._theme = settings.Theme
     self._scale = settings.Scale
     self._global_show_portraits = settings.ShowPortraits
+    self._center_text_vertically = settings.CenterTextVertically == true
+    self._message_text_center_offset_y = 0
     self._theme_options = theme_options
     -- Theme, zone variant and portrait preference are the cache boundaries.
     self._portrait_path_cache = {}
@@ -123,6 +127,8 @@ end
 function ui:scale(scale)
     self._scale = scale
     self:position()
+    self:update_message_text_layout()
+    self:position()
 end
 
 function ui:position(x_pos, y_pos)
@@ -144,6 +150,7 @@ function ui:position(x_pos, y_pos)
             message_text_offset_y = self._theme_options.portrait.message_offset_y * self._scale
         end
     end
+    message_text_offset_y = message_text_offset_y + self._message_text_center_offset_y * self._scale
     local name_text_offset_x = self._theme_options.name.offset_x * self._scale
     local name_text_offset_y = self._theme_options.name.offset_y * self._scale
 
@@ -344,10 +351,40 @@ function ui:wrap_text(str)
 	return new_str
 end
 
+function ui:update_message_text_layout()
+    self._message_text_center_offset_y = 0
+    if not self._center_text_vertically or self._current_text == '' then return end
+
+    -- Measure the complete wrapped message, then restore the currently revealed portion.
+    local visible_text = self._current_text:sub(1, self._chars_shown)
+    self.message_text:text(self._current_text)
+    local _, text_height = self.message_text:extents()
+    self.message_text:text(visible_text)
+
+    text_height = tonumber(text_height)
+    local box_height = self._theme_options.message.height * self._scale
+    if not text_height or text_height <= 0 or text_height > box_height then return end
+
+    -- The theme's normal text offset is for top alignment. Cancel it while centering
+    -- so the measured text block is centered in the dialogue background itself.
+    local base_offset_y = self._theme_options.message.offset_y
+    if self._has_portrait and self._theme_options.portrait and self._theme_options.portrait.message_offset_y then
+        base_offset_y = self._theme_options.portrait.message_offset_y
+    end
+    self._message_text_center_offset_y = (box_height - text_height) / (2 * self._scale) - base_offset_y
+end
+
+function ui:set_center_text_vertically(enabled)
+    self._center_text_vertically = enabled == true
+    self:update_message_text_layout()
+    self:position()
+end
+
 function ui:set_message(message)
     self._current_text = message
     self._chars_shown = 0
     self.message_text:text('')
+    self:update_message_text_layout()
 
     -- this is here to update the layout depending if there's a portrait or not
     self:position()

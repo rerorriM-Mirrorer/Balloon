@@ -1,6 +1,46 @@
-# TESTING.md — Balloon B02 countdown-hidden patch (2026-11-11)
+# TESTING.md - Balloon B03 vertical text centering (2026-11-13)
 
-**Current patch:** `development/balloon-b02-hide-timer-20261111`, based on the latest B02 centered-theme work. **No live Windower/FFXI test yet.** The original B02 branch and `master` remain untouched.
+**Current patch:** `development/balloon-b03-vertical-text-center-20261113`, based on the B02 countdown-hidden branch. **No live Windower/FFXI test yet.** The prior B02 branch and `master` remain untouched.
+
+## Installation and verification
+
+1. Back up the installed `Windower4/addons/Balloon/` folder and especially `data/settings.xml`.
+2. Download the complete B03 branch ZIP and install its contents into `Windower4/addons/Balloon/`. Keep the existing `data/settings.xml`; the new setting defaults to off and should merge without replacing saved preferences.
+3. Reload with `//bl restart` or `//lua reload balloon`. Check `//bl status`; it should report `center_text=false` unless you already enabled the option.
+4. With centering off, run `//bl test TestNPC : A short line of dialogue.` Confirm the existing top-aligned layout.
+5. Run `//bl center_text on`, then repeat the short test. The complete text block should sit vertically centered in the dialogue background while it reveals at the existing speed.
+6. Test a few wrapped lines. The whole prepared message should be centered as one block, not each line individually.
+7. Test a message long enough to fill or exceed the dialogue area's height. If measured text height exceeds the background, it should remain top-aligned rather than being pushed outside the panel.
+8. While a message is partway through its reveal, toggle `//bl center_text off` and back on. The reveal should continue from its current point without restarting or changing the message.
+9. Confirm `//bl center_text off` and `//bl center_text on` are idempotent, while bare `//bl center_text` toggles. The preference should survive `//bl restart`.
+10. Check with portraits on/off, a theme change, scale changes, dragging, prompted dialogue, and promptless/timed dialogue. Confirm the B02 hidden-countdown behavior and timeout are unchanged.
+
+### Acceptance checklist
+
+- [ ] New installs default to top-aligned text (`CenterTextVertically=false`).
+- [ ] `//bl center_text on/off` changes alignment immediately and saves the preference.
+- [ ] Bare `//bl center_text` toggles the setting.
+- [ ] Short and medium messages are centered as a single text block.
+- [ ] Over-height messages fall back to top alignment.
+- [ ] Toggling during text reveal does not reset the reveal.
+- [ ] Theme, portrait, scale, position, prompt, and timed-dialogue behavior remain intact.
+- [ ] Existing per-character/global settings survive the update.
+
+### Change and verification
+
+- **Code:** `defaults.lua` adds `CenterTextVertically=false`; `ui.lua` measures the full wrapped message with `:extents()`, computes a centered vertical offset when the message fits, and restores the currently revealed text after measurement. `Balloon.lua` adds the `center_text` command, help/status reporting, and version `0.13-a.20261113.1`.
+- **Measurement basis:** Windower's `texts` library exposes `:extents()`, backed by `windower.text.get_extents()`, which returns rendered width and height in pixels. The code uses the measured height rather than estimating from character count or line count.
+- **Static review:** Source paths and settings flow were inspected. No Lua 5.1 interpreter or Windower runtime has been used in this pass. This is not a smoke or live test.
+- **Live status:** Pending user testing in FFXI. Record client resolution, theme, scale, portrait state, sample message length, and any visual overlap or Lua errors.
+- **Delivery:** Pending commit and push.
+
+---
+
+## Previous B02 countdown-hidden patch record
+
+### TESTING.md — Balloon B02 countdown-hidden patch (2026-11-11)
+
+**Historical patch:** `development/balloon-b02-hide-timer-20261111`, based on the latest B02 centered-theme work. **No live Windower/FFXI test yet.** The original B02 branch and `master` remain untouched.
 
 ## Installation and verification
 
